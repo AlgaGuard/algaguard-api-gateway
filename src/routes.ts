@@ -19,6 +19,7 @@ router.post("/auth/check", async (request, response) => {
       token,
       process.env.KEYCLOAK_ISSUER ?? "http://keycloak:8080/realms/algaguard",
       process.env.KEYCLOAK_AUDIENCE ?? "algaguard-api",
+      process.env.KEYCLOAK_JWKS_URL,
     );
     return response.json({ subject: result.payload.sub, valid: true });
   } catch {
@@ -40,6 +41,7 @@ router.use("/services/:service", async (request, response) => {
       authorization.replace(/^Bearer /, ""),
       process.env.KEYCLOAK_ISSUER ?? "http://keycloak:8080/realms/algaguard",
       process.env.KEYCLOAK_AUDIENCE ?? "algaguard-api",
+      process.env.KEYCLOAK_JWKS_URL,
     );
   } catch {
     return response.status(401).json({ title: "Invalid token", status: 401 });

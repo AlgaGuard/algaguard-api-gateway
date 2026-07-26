@@ -25,10 +25,9 @@ export async function validateKeycloakToken(
   token: string,
   issuer: string,
   audience: string,
+  jwksUrl = `${issuer}/protocol/openid-connect/certs`,
 ) {
-  const jwks = createRemoteJWKSet(
-    new URL(`${issuer}/protocol/openid-connect/certs`),
-  );
+  const jwks = createRemoteJWKSet(new URL(jwksUrl));
   return jwtVerify(token, jwks, { issuer, audience });
 }
 
