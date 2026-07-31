@@ -2,6 +2,23 @@ import { Router } from "express";
 import { TokenBucket, routes, validateKeycloakToken } from "./domain.js";
 export const router = Router();
 const limiter = new TokenBucket(60, 60_000);
+
+type SafeHeaderResponse = {
+  type(value: string): unknown;
+  setHeader(name: string, value: string): unknown;
+};
+
+export function copySafeUpstreamHeaders(
+  upstreamHeaders: Headers,
+  response: SafeHeaderResponse,
+) {
+  response.type(upstreamHeaders.get("content-type") ?? "application/json");
+  const cacheControl = upstreamHeaders.get("cache-control");
+  if (cacheControl) {
+    response.setHeader("Cache-Control", cacheControl);
+  }
+}
+
 router.get("/routes", (_request, response) => response.json(routes));
 router.post("/auth/check", async (request, response) => {
   const key = request.ip ?? "unknown";
@@ -59,6 +76,6 @@ router.use("/services/:service", async (request, response) => {
       : { body: JSON.stringify(request.body) }),
   });
   response.status(upstream.status);
-  response.type(upstream.headers.get("content-type") ?? "application/json");
+  copySafeUpstreamHeaders(upstream.headers, response);
   return response.send(Buffer.from(await upstream.arrayBuffer()));
 });
